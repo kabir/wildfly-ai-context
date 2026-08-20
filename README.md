@@ -2,6 +2,15 @@
 
 The `wildfly-ai-context` repository is the central knowledge hub and context router for coding agents working across the WildFly ecosystem. It enables AI-assisted development across the ecosystem's many tightly coupled repositories without overwhelming prompt context windows or duplicating documentation.
 
+## Contents
+
+- [The Progressive Disclosure Framework](#the-progressive-disclosure-framework)
+- [Hub-and-Spoke Ecosystem Integration](#hub-and-spoke-ecosystem-integration)
+- [Repository Contents](#repository-contents)
+- [Satellite Repositories](#satellite-repositories)
+- [Onboarding a New Repository](#onboarding-a-new-repository)
+- [Maintainer Guidelines](#maintainer-guidelines)
+
 ## The Progressive Disclosure Framework
 
 Rather than dumping full documentation suites into an agent's context window, this ecosystem uses **progressive disclosure**. Information is fetched in lightweight tiers, resolving context on demand:
