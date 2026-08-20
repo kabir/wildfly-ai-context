@@ -56,7 +56,12 @@ Read the current hub `llms.txt` to understand the existing sections.
 - Update the dependency direction diagram if the new repository introduces new dependency edges.
 - Add any "violations to watch for" specific to this repository.
 
-### Step 6: Review and summarize
+### Step 6: Update `README.md`
+
+- Update the satellite repositories table: change the repository's status from "Planned" to "Indexed", add a link to its GitHub repository, and verify the description is accurate.
+- If the repository is not already in the table, add a new row.
+
+### Step 7: Review and summarize
 
 - Re-read all modified files to verify internal consistency:
   - Links in `llms.txt` are well-formed
