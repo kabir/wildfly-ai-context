@@ -33,6 +33,14 @@ Architectural Decision Records live in `adrs/` and follow this convention:
 - `architecture/repository-boundaries.md` should be updated when SPI contracts between repositories change, when schema versioning rules are modified, or when new boundary enforcement mechanisms are introduced.
 - Keep both documents factual and current. They are consumed by agents making routing decisions; stale information causes incorrect repository targeting.
 
+## Skills
+
+Skills are defined in `.agents/skills/`. The `.claude/skills` directory is a symlink to `.agents/skills` so that Claude Code discovers them automatically.
+
+### `onboard-repository`
+
+Onboards a new satellite repository into the hub. Invoke with the URL of the new repository's root `llms.txt` file. The skill walks through fetching the remote index, classifying the repository, and updating `llms.txt`, `architecture/ecosystem-topology.md`, and `architecture/repository-boundaries.md`.
+
 ## Cross-Repository Task Workflow
 
 When an agent receives a task that touches multiple repositories:
