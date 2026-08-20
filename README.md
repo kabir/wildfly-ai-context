@@ -22,17 +22,27 @@ See [ADR 0001](./adrs/0001-hub-and-spoke-ai-context.md) for the rationale behind
 
 ## Onboarding a new repository
 
-To add a new satellite repository to the hub:
+Onboarding is a two-step process: first prepare the satellite repository, then register it in the hub.
 
-1. Ensure the repository has an `llms.txt` file (typically on an `ai-index` branch) that indexes its components, key directories, and domain-specific guidance.
-2. Run the `onboard-repository` skill with the URL of the repository's root `llms.txt`. The skill will:
-   - Fetch and analyze the remote `llms.txt`
-   - Add the repository to the hub's `llms.txt` index
-   - Update `architecture/ecosystem-topology.md` with the repository's components and interactions
-   - Update `architecture/repository-boundaries.md` with ownership rules and SPI contracts
-3. Review the generated changes. The skill flags areas where the remote `llms.txt` didn't provide enough information, so you may need to fill in gaps manually.
+### Step 1: Prepare the satellite repository
 
-If you are not using an agent with skill support, you can follow the same steps manually — the skill file at `.agents/skills/onboard-repository.md` documents the full process.
+Run the `prepare-repository` skill with the local path to the target repository checkout. The skill will:
+- Create `llms.txt` indexing the repository's components and documentation
+- Create `AGENTS.md` with cross-repo routing back to the hub (and a `CLAUDE.md` symlink)
+- Determine the raw GitHub URL for the repository's `llms.txt`
+
+### Step 2: Register in the hub
+
+Run the `onboard-repository` skill with the URL of the repository's root `llms.txt`. The skill will:
+- Fetch and analyze the remote `llms.txt`
+- Add the repository to the hub's `llms.txt` index
+- Update `architecture/ecosystem-topology.md` with the repository's components and interactions
+- Update `architecture/repository-boundaries.md` with ownership rules and SPI contracts
+- Update the satellite repositories table in this README
+
+Review the generated changes after each step. Both skills flag areas where they made assumptions or didn't have enough information.
+
+If you are not using an agent with skill support, you can follow the same steps manually — the skill files at `.agents/skills/prepare-repository.md` and `.agents/skills/onboard-repository.md` document the full process.
 
 ## Satellite repositories
 

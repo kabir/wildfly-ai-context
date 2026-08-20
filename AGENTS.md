@@ -37,9 +37,13 @@ Architectural Decision Records live in `adrs/` and follow this convention:
 
 Skills are defined in `.agents/skills/`. The `.claude/skills` directory is a symlink to `.agents/skills` so that Claude Code discovers them automatically.
 
+### `prepare-repository`
+
+Prepares a satellite repository for onboarding into the hub. Invoke with the local path to the target repository checkout. The skill creates `llms.txt`, `AGENTS.md` (with `CLAUDE.md` symlink), and the cross-repo routing section — all in the target repository. Run this before `onboard-repository`.
+
 ### `onboard-repository`
 
-Onboards a new satellite repository into the hub. Invoke with the URL of the new repository's root `llms.txt` file. The skill walks through fetching the remote index, classifying the repository, and updating `llms.txt`, `architecture/ecosystem-topology.md`, and `architecture/repository-boundaries.md`.
+Onboards a prepared satellite repository into the hub. Invoke with the URL of the new repository's root `llms.txt` file. The skill walks through fetching the remote index, classifying the repository, and updating `llms.txt`, `architecture/ecosystem-topology.md`, and `architecture/repository-boundaries.md`.
 
 ## Cross-Repository Task Workflow
 
