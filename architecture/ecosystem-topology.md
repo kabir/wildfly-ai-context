@@ -7,19 +7,23 @@ This document describes the component hierarchy, dependency relationships, and e
 The WildFly ecosystem is organized in a layered architecture where each layer builds on the one below it:
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                  Developer Tooling                       │
-│  WildFly Maven Plugin · WildFly Glow · WildFly Operator │
-├─────────────────────────────────────────────────────────┤
-│              WildFly (Full Distribution)                  │
-│  Jakarta EE Subsystems · Clustering · Elytron · BOMs     │
-├─────────────────────────────────────────────────────────┤
-│                    WildFly Core                           │
-│  Controller · Management Model · CLI · Remoting · Boot   │
-├─────────────────────────────────────────────────────────┤
-│                 Galleon / Feature Packs                   │
-│  Provisioning Engine · Layers · Feature Specs             │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                       Developer Tooling                          │
+│     WildFly Maven Plugin · WildFly Glow · WildFly Operator       │
+├────────────────────────────┬─────────────────────────────────────┤
+│   Feature Pack Registry    │     Feature Pack Extensions          │
+│   (wildfly-galleon-        │  Cloud · Datasources · gRPC         │
+│    feature-packs)          │  MyFaces · GraphQL · Vault           │
+├────────────────────────────┴─────────────────────────────────────┤
+│                WildFly (Full Distribution)                        │
+│    Jakarta EE Subsystems · Clustering · Elytron · BOMs           │
+├──────────────────────────────────────────────────────────────────┤
+│                      WildFly Core                                │
+│    Controller · Management Model · CLI · Remoting · Boot         │
+├──────────────────────────────────────────────────────────────────┤
+│                   Galleon / Feature Packs                         │
+│    Provisioning Engine · Layers · Feature Specs                   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ### WildFly Core (Base Runtime and Management)
@@ -71,6 +75,74 @@ The WildFly Operator manages WildFly application lifecycle on Kubernetes and Ope
 - Coordinates graceful shutdown with session draining and transaction recovery.
 - Integrates with OpenShift build infrastructure for S2I (Source-to-Image) workflows.
 - Manages server configuration through WildFlyServer custom resources.
+
+### WildFly Galleon Feature Packs (Feature Pack Registry)
+
+The `wildfly-galleon-feature-packs` repository (`org.wildfly.galleon.feature-packs`) is the central registry of Galleon feature packs that can be provisioned with each WildFly server version. It is structured as a versioned catalog:
+
+- **Per-Version Provisioning Files**: Each WildFly version (e.g., `41.0.0.Final/`) has `provisioning-bare-metal.xml` and `provisioning-cloud.xml` listing compatible feature packs with their Maven coordinates and versions. Tech-preview variants are in `tech-preview/` subdirectories; EE 10 variants are in `ee-10/` subdirectories (versions 40+).
+- **JSON Catalogs**: The `catalog/` directory provides machine-readable JSON metadata per version (feature pack lists, variant definitions) consumed by tooling.
+- **Spaces**: The `spaces/` directory defines feature-pack spaces (e.g., incubating) with their own version metadata, allowing feature packs to graduate from incubating to stable.
+- **Glow Integration**: WildFly Glow reads this registry from the `release` branch to resolve feature pack coordinates for server provisioning. The registry is the authoritative source of which feature packs are compatible with each WildFly version.
+- **Release Automation**: Shell scripts (`add-wildfly-release.sh`, `release-publish-maven-metadata.sh`) automate adding new WildFly releases and publishing Maven metadata.
+
+### Feature Pack Extensions
+
+The following Galleon feature packs extend WildFly with additional capabilities. Each defines one or more Galleon layers that can be provisioned alongside the WildFly base feature packs. They share a common pattern: a Galleon layer definition, JBoss Module descriptors, and typically a WildFly subsystem extension.
+
+#### WildFly Cloud Galleon Pack
+
+The cloud feature pack (`org.wildfly.cloud:wildfly-cloud-galleon-pack`) adjusts WildFly configuration for OpenShift and Kubernetes:
+
+- **Cloud Configuration Layers**: The `cloud-default-config` layer and related adjustment layers configure JGroups for TCP-based clustering (replacing UDP multicast), route logs to console output, enable health probes, and tune subsystems for container environments.
+- **Launch Scripts**: Shell scripts provisioned into the server's `bin/launch/` directory configure the server via environment variables at startup — datasource URLs/credentials, JGroups parameters, Elytron security, MicroProfile Config, messaging endpoints, and more.
+- **Bootable JAR Configurator**: A runtime extension (`CloudConfigurator`) applies cloud-specific configuration at bootable JAR boot time, including node naming and JGroups `KUBE_PING` discovery protocol setup.
+- **Preview Variant**: `wildfly-preview-cloud-galleon-pack` targets Jakarta EE 11+ preview servers.
+
+#### WildFly Datasources Galleon Pack
+
+The datasources feature pack (`org.wildfly:wildfly-datasources-galleon-pack`) provides database connectivity layers:
+
+- **Three-Layer Pattern**: Each supported database gets three decorator layers — a driver layer (installs the JDBC driver module), a datasource layer (configures a datasource with environment-variable-driven connection properties), and a default-datasource layer (marks it as the Jakarta EE default datasource).
+- **Supported Databases**: PostgreSQL, MySQL, MariaDB, Oracle, DB2, MS SQL Server, H2, and AWS Advanced JDBC Wrapper (8 total).
+- **Environment Variable Configuration**: All datasource properties (URL, user, password, connection pool min/max, validation) are configurable via environment variables, making layers suitable for cloud deployments.
+- **Driver Version Override**: JDBC driver versions can be overridden via system properties during provisioning.
+
+#### WildFly gRPC Feature Pack
+
+The gRPC feature pack (`org.wildfly.grpc:wildfly-grpc-feature-pack`) adds gRPC subsystem support:
+
+- **Subsystem Extension**: The `org.wildfly.extension.grpc` subsystem manages a Netty-based gRPC server (default port 9555) with configurable flow control, keep-alive, message size limits, and TLS settings.
+- **Auto-Discovery**: At deployment time, a `DeploymentUnitProcessor` scans applications using Jandex for `BindableService` and `ServerInterceptor` implementations and registers them with the gRPC server.
+- **TLS Support**: Supports plaintext, one-way TLS, and mutual TLS configurations via key/trust store paths or Elytron SSL context references.
+- **Per-Deployment Config**: Deployments can include `META-INF/grpc-deployment.xml` for deployment-specific gRPC configuration.
+- **Galleon Layer**: The `grpc` layer depends on `cdi` and is registered as an RPC add-on for WildFly Glow discovery.
+
+#### WildFly MyFaces Feature Pack
+
+The MyFaces feature pack (`org.wildfly:wildfly-myfaces-feature-pack`) provides an alternative Jakarta Faces implementation:
+
+- **Galleon Layer**: The `myfaces` layer depends on `cdi` and `jsf`, sets `default-jsf-impl-slot` to `myfaces`, and declares itself as an add-on alternative to the default JSF implementation.
+- **Injection Bridge**: Java code in the `myfaces-injection` module bridges MyFaces managed beans to WildFly's CDI container, delegates annotation scanning to WildFly's deployment infrastructure, and bootstraps MyFaces via a `ServletContainerInitializer`.
+- **JBoss Modules**: Module descriptors for the MyFaces API JAR, implementation JAR, and injection bridge in the `myfaces` slot of the JSF module path.
+
+#### WildFly MicroProfile GraphQL Feature Pack
+
+The GraphQL feature pack (`org.wildfly.extras.graphql:wildfly-microprofile-graphql-feature-pack`) adds MicroProfile GraphQL support:
+
+- **Subsystem Extension**: The `microprofile-graphql-smallrye` subsystem integrates SmallRye GraphQL into WildFly, processing deployments to expose GraphQL endpoints and optionally enabling the GraphiQL developer UI.
+- **Galleon Layer**: The `microprofile-graphql` layer depends on `cdi`, `microprofile-config`, and `microprofile-context-propagation`. It also requires the WildFly Reactive feature pack.
+- **GraphQL Client**: Includes SmallRye GraphQL Client modules with both standard and Vert.x-based client implementations.
+- **TCK Compliance**: Runs the MicroProfile GraphQL Technology Compatibility Kit for specification compliance.
+
+#### WildFly Vault Feature Pack
+
+The vault feature pack (`org.wildfly.security.vault:wildfly-vault-feature-pack`) integrates HashiCorp Vault:
+
+- **Subsystem Extension**: The `hashicorp-vault` subsystem connects to HashiCorp Vault servers to retrieve credentials and secrets, with HTTPS and mutual TLS connectivity via Elytron authentication contexts.
+- **Credential Store Integration**: Provides Vault-backed Elytron credential stores that make Vault secrets available to any WildFly resource supporting `credential-reference` attributes (datasources, messaging, etc.).
+- **Expression Resolution**: The `VaultExpressionResolver` resolves `${HC_VAULT::store:alias}` expressions anywhere in WildFly configuration, allowing secrets to be referenced declaratively without embedding them.
+- **Galleon Layer**: The `hashicorp-vault` layer depends on `elytron`, `management`, and `core-tools`, registered as a security add-on for WildFly Glow.
 
 ## Build and Provisioning Flow
 

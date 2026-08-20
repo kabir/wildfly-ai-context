@@ -52,4 +52,11 @@ If you are not using an agent with skill support, you can follow the same steps 
 | [wildfly](https://github.com/wildfly/wildfly) | Indexed | Full application server — Jakarta EE subsystems, clustering, Elytron, distribution packaging |
 | [wildfly-glow](https://github.com/wildfly/wildfly-glow) | Indexed | Provisioning analysis engine — scans deployments to discover required Galleon feature packs and layers |
 | [wildfly-maven-plugin](https://github.com/wildfly/wildfly-maven-plugin) | Indexed | Developer-facing build tooling for provisioning, packaging, deploying, and running WildFly servers from Maven |
+| [wildfly-galleon-feature-packs](https://github.com/wildfly/wildfly-galleon-feature-packs) | Indexed | Central registry of Galleon feature packs for WildFly server provisioning |
+| [wildfly-cloud-galleon-pack](https://github.com/wildfly/wildfly-cloud-galleon-pack) | Indexed | Cloud-optimized Galleon feature pack for OpenShift/Kubernetes environments |
+| [wildfly-datasources-galleon-pack](https://github.com/wildfly/wildfly-datasources-galleon-pack) | Indexed | JDBC database driver and datasource Galleon layers for 8 databases |
+| [wildfly-grpc-feature-pack](https://github.com/wildfly-extras/wildfly-grpc-feature-pack) | Indexed | gRPC subsystem support as a Galleon feature pack |
+| [wildfly-myfaces-feature-pack](https://github.com/wildfly/wildfly-myfaces-feature-pack) | Indexed | Apache MyFaces (Jakarta Faces) alternative implementation feature pack |
+| [wildfly-graphql-feature-pack](https://github.com/wildfly-extras/wildfly-graphql-feature-pack) | Indexed | MicroProfile GraphQL support via SmallRye GraphQL feature pack |
+| [wildfly-vault-feature-pack](https://github.com/wildfly-security/wildfly-vault-feature-pack) | Indexed | HashiCorp Vault credential management integration feature pack |
 | wildfly-operator | Planned | Kubernetes operator for managing WildFly deployments |

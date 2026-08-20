@@ -60,6 +60,29 @@ WildFly Glow contains the provisioning analysis engine. It is a library dependen
 
 **Test**: If the component scans deployments to discover required layers, manages the rule-matching database, or generates provisioning configuration from scan results, it belongs in wildfly-glow. If it's a Maven build goal that consumes that output, it belongs in wildfly-maven-plugin.
 
+### What belongs in `wildfly-galleon-feature-packs`
+
+The feature packs registry contains the version-indexed catalog of Galleon feature packs:
+
+- **Per-version provisioning XML files**: `provisioning-bare-metal.xml` and `provisioning-cloud.xml` listing compatible feature packs with Maven coordinates for each WildFly release.
+- **JSON catalogs**: Machine-readable feature pack metadata for tooling consumption.
+- **Spaces and variants**: Feature pack spaces (incubating, stable) and server variant definitions (Preview, EE 10).
+- **Release automation scripts**: Scripts for adding new WildFly releases and publishing Maven metadata.
+
+**Test**: If it describes which feature packs are compatible with which WildFly version, it belongs in wildfly-galleon-feature-packs. If it defines the feature pack content itself (layers, modules, subsystems), it belongs in the specific feature pack repository.
+
+### What belongs in a Galleon Feature Pack Extension
+
+Each extension feature pack (cloud, datasources, gRPC, MyFaces, GraphQL, vault) follows a common pattern. A component belongs in a feature pack extension if it adds an optional capability to WildFly that is independently releasable:
+
+- **Galleon layer definitions**: `layer-spec.xml` files declaring the layer's dependencies, subsystem configuration, and Glow discovery metadata.
+- **JBoss Module descriptors**: `module.xml` files packaging third-party libraries (JDBC drivers, gRPC, SmallRye GraphQL, etc.) into the WildFly module system.
+- **Subsystem extensions** (when applicable): Management model resources, XML schema parsing, deployment processors, and services that integrate the capability with WildFly's runtime.
+- **Feature pack build descriptors**: `wildfly-feature-pack-build.xml` declaring dependencies on WildFly's base feature packs.
+- **Launch scripts** (cloud pack): Shell scripts that configure the server at startup via environment variables.
+
+**Test**: If the component adds an optional server capability that can be provisioned independently of the base WildFly distribution, it belongs in its own feature pack extension. If it's part of the base Jakarta EE or MicroProfile platform, it belongs in wildfly.
+
 ## SPI Contracts Between Repositories
 
 ### wildfly-core → wildfly
@@ -93,6 +116,17 @@ The `wildfly` repository depends on `wildfly-core` and extends it. The contracts
 
 - The WildFly Maven Plugin delegates provisioning to the Galleon API. It passes feature pack coordinates, layer names, channel manifests, and configuration options (stability level, forked provisioning).
 - The plugin also invokes the JBoss CLI (from wildfly-core) for post-provisioning script execution, using the embedded CLI API in admin-only mode.
+
+### Glow → Feature Packs Registry
+
+- WildFly Glow reads the `wildfly-galleon-feature-packs` repository (from the `release` branch) to discover which feature packs are available for a given WildFly version. The registry provides `provisioning-bare-metal.xml` and `provisioning-cloud.xml` files listing compatible feature pack coordinates.
+- When Glow identifies layers that belong to a third-party feature pack, it resolves the feature pack coordinates from the registry to determine which artifact to provision.
+
+### Feature Pack Extensions → WildFly Base Feature Packs
+
+- All feature pack extensions declare Galleon feature pack dependencies on WildFly's base feature packs (`wildfly-ee-galleon-pack`, `wildfly-galleon-pack`) via `wildfly-feature-pack-build.xml` or `wildfly-user-feature-pack-build.xml`. These dependencies define the inheritance chain for layer definitions, module resolution, and configuration generation.
+- Feature pack extensions can override or extend layers from the base packs (e.g., the cloud pack adjusts the JGroups, logging, and datasource configurations defined in the base WildFly feature pack).
+- Extensions register their layers as Glow add-ons via `org.wildfly.rule.add-on` annotations in layer specs, enabling Glow to discover and suggest them based on deployment content analysis.
 
 ## Schema Versioning Standards
 
@@ -137,6 +171,14 @@ wildfly-maven-plugin ──→ wildfly-glow (library dependency)
                      ──→ JBoss CLI (from wildfly-core, embedded mode)
 wildfly-glow ──→ Galleon API
              ──→ Feature Pack metadata (from wildfly)
+             ──→ wildfly-galleon-feature-packs (version catalog, release branch)
+wildfly-galleon-feature-packs ──→ (metadata only, no code dependencies)
+wildfly-cloud-galleon-pack ──→ wildfly (depends on wildfly-ee-galleon-pack)
+wildfly-datasources-galleon-pack ──→ wildfly (depends on wildfly-ee-galleon-pack)
+wildfly-grpc-feature-pack ──→ wildfly (depends on wildfly-ee-galleon-pack)
+wildfly-myfaces-feature-pack ──→ wildfly (depends on wildfly-ee-galleon-pack)
+wildfly-graphql-feature-pack ──→ wildfly (depends on wildfly-ee-galleon-pack, wildfly-galleon-pack)
+wildfly-vault-feature-pack ──→ wildfly (depends on wildfly-ee-galleon-pack)
 wildfly ──→ wildfly-core
 wildfly-core ──→ (JBoss Modules, JBoss MSC, JBoss Remoting, XNIO)
 ```
@@ -147,5 +189,8 @@ wildfly-core ──→ (JBoss Modules, JBoss MSC, JBoss Remoting, XNIO)
 - A subsystem in wildfly directly instantiating a deployment processor from another subsystem instead of going through the capability system.
 - WildFly Glow or the Maven plugin importing runtime server classes instead of using metadata and Galleon APIs.
 - Circular layer dependencies in feature pack definitions.
+- A feature pack extension importing classes from another feature pack extension (each should depend only on WildFly's base feature packs).
+- A feature pack extension declaring a build-time dependency on wildfly-core or wildfly runtime JARs instead of using the Galleon feature pack build descriptor to declare feature pack dependencies.
+- The feature packs registry containing actual feature pack content (layers, modules) instead of metadata references.
 
 These violations should be caught in code review and, where possible, enforced by module dependency declarations and build-time checks.
