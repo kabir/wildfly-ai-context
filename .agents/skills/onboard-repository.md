@@ -14,6 +14,7 @@ Work through each step below. Create a task checklist to track progress.
 ### Step 1: Fetch and analyze the remote llms.txt
 
 - Use WebFetch to retrieve the `llms.txt` from the provided URL.
+- If the fetch fails or the URL returns a 404, the repository likely hasn't been prepared yet. Suggest the user run the `prepare-repository` skill first to create the `llms.txt` and `AGENTS.md` in the target repository, then push to the appropriate branch before retrying.
 - Parse it to understand:
   - Repository name and purpose
   - Components and subsystems it provides
