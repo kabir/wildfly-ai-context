@@ -1,0 +1,20 @@
+# WildFly Ecosystem AI Context Hub
+
+> This is the global index for the WildFly ecosystem, covering core server runtime, full application server distribution, provisioning tooling, and cross-cutting architectural guidance. Agents and LLMs should use this file as the primary entry point for navigating WildFly's multi-repository codebase. Each satellite repository maintains its own `llms.txt` with component-level detail; this hub links them together and provides ecosystem-wide context that no single repository owns.
+
+## Core & Runtime Repositories
+
+- [WildFly Core](https://raw.githubusercontent.com/kabir/wildfly-core/ai-index/llms.txt): Core server management model, controller, CLI, and subsystem parsing. Defines the kernel runtime, management resource tree, operation handlers, deployment scanner SPI, and the Remoting-based management protocol. All subsystems in wildfly-core are boot-critical and available in both standalone and domain mode.
+- [WildFly Full](https://raw.githubusercontent.com/kabir/wildfly/ai-index/docs/src/main/asciidoc/llms.txt): Full application server, Jakarta EE subsystem guides, security, HA, and deployment. Extends wildfly-core with Jakarta EE specifications (Servlet, EJB, JPA, JMS, CDI, JAX-RS, MicroProfile), clustering, Elytron security integration, and the complete distribution packaging.
+
+## Ecosystem Tooling (Placeholders/Future)
+
+- WildFly Glow: Provisioning analysis engine that inspects application archives to determine the minimal set of Galleon feature packs and layers required. Repository index will be linked once the ai-index branch is established.
+- WildFly Maven Plugin: Developer-facing build tooling for packaging, provisioning, and running WildFly servers from Maven. Coordinates Galleon provisioning, CLI script execution, and dev-mode hot-reload. Repository index forthcoming.
+- WildFly Operator: Kubernetes operator for managing WildFly application deployments on OpenShift and vanilla Kubernetes. Handles StatefulSet orchestration, session draining, and transaction recovery. Repository index forthcoming.
+
+## Global Architecture & Contracts
+
+- [Ecosystem Topology](./architecture/ecosystem-topology.md): Component relationships and execution flow across repositories. Documents the hierarchy from core runtime through full distribution to provisioning and deployment tooling.
+- [Repository Boundaries](./architecture/repository-boundaries.md): SPI boundaries and dependency rules between Core, WildFly, and provisioning tools. Defines what belongs where and the contract versioning discipline that keeps repositories independently releasable.
+- [ADR 0001: Hub-and-Spoke AI Context](./adrs/0001-hub-and-spoke-ai-context.md): Architectural Decision Record for the multi-repo AI context model. Explains why a federated index approach was chosen over monolithic context dumps or per-query repository crawling.
