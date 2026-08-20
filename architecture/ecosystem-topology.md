@@ -45,12 +45,13 @@ The `wildfly` repository extends `wildfly-core` with the full Jakarta EE platfor
 
 ### WildFly Glow (Provisioning Analysis)
 
-WildFly Glow inspects application archives to determine the minimal server configuration:
+WildFly Glow (`org.wildfly.glow`) is the provisioning analysis engine. It is both a standalone tool (with its own CLI) and a library consumed by the WildFly Maven Plugin. Its modules are organized into three areas:
 
-- Scans WAR/EAR/JAR archives for API usage, annotations, deployment descriptors, and configuration files.
-- Maps discovered application requirements to Galleon layers (the unit of server trimming).
-- Produces a provisioning configuration that can be consumed by the WildFly Maven Plugin or Galleon CLI to build a server containing only the subsystems the application actually needs.
-- Supports add-on discovery for optional capabilities (e.g., database drivers, cloud integrations) based on the deployment environment.
+- **Core Scanning Engine** (`core/`): `GlowSession` orchestrates the end-to-end scan of application archives (WAR, JAR, EAR). `ScanArguments` configures scan parameters (execution context, profile, add-ons, version, server variant). `ScanResults` holds discovered layers and feature packs. `LayerMapping` and `LayerMetadata` implement the rule-matching system that maps deployment content (Java API types, XML descriptors, properties files, annotations) to Galleon layers. `ProvisioningUtils` generates Galleon provisioning configuration from scan results. `DockerSupport` generates container images.
+- **CLI and Integration** (`cli/`, `cli-support/`): Picocli-based command-line interface with `ScanCommand` (deployment scanning), `ShowAddOnsCommand`, `ShowServerVersionsCommand`, `ShowConfigurationCommand`, and `GoOfflineCommand`. The `cli-support/` module provides shared infrastructure (`AbstractCommand`, `CLIConfigurationResolver`). JBang integration allows running single Java files in WildFly with Glow-based provisioning.
+- **Build and Test Tooling** (`arquillian-plugin/`, `doc-plugin/`, `maven-resolver/`): The Arquillian Maven plugin (`ScanMojo`) scans `@Deployment` methods in test classes to generate `provisioning.xml` for test server provisioning. The doc plugin generates documentation. The maven-resolver module handles Galleon feature pack resolution from Maven repositories.
+- **OpenShift Deployment** (`openshift-deployment/`): Automatic service deployers for PostgreSQL, MySQL, MariaDB, AMQ Broker, and Keycloak. When deploying to OpenShift via the CLI, Glow detects the need for these services and deploys them alongside the application, binding them automatically.
+- **Add-on Discovery** (`Suggestions`): Based on discovered layers, Glow suggests optional server features (e.g., SSL, OpenAPI, database drivers) that the developer can enable. Add-ons are grouped by family and context (bare-metal vs cloud).
 
 ### WildFly Maven Plugin (Developer Tooling)
 

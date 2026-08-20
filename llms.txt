@@ -10,10 +10,10 @@
 ## Ecosystem Tooling
 
 - [WildFly Maven Plugin](https://raw.githubusercontent.com/kabir/wildfly-maven-plugin/ai-index/llms.txt): Developer-facing Maven build tooling for provisioning, packaging, deploying, and running WildFly servers. Provides 15 Maven goals including Galleon-based server provisioning, Bootable JAR packaging, container image building, dev-mode with hot-reload, and CLI script execution. Integrates WildFly Glow for automatic discovery of required feature packs and layers via `<discover-provisioning-info/>`.
+- [WildFly Glow](https://raw.githubusercontent.com/kabir/wildfly-glow/ai-index/llms.txt): Provisioning analysis engine that scans application deployments (WAR, JAR, EAR) to determine the minimal set of Galleon feature packs and layers required. Provides a core scanning library (used by the WildFly Maven Plugin), a standalone CLI, an Arquillian Maven plugin for test provisioning, and OpenShift deployment support with automatic service deployers for PostgreSQL, MySQL, MariaDB, AMQ Broker, and Keycloak. Also supports JBang integration for running single Java files in WildFly.
 
 ## Ecosystem Tooling (Placeholders/Future)
 
-- WildFly Glow: Provisioning analysis engine that inspects application archives to determine the minimal set of Galleon feature packs and layers required. Repository index will be linked once the ai-index branch is established.
 - WildFly Operator: Kubernetes operator for managing WildFly application deployments on OpenShift and vanilla Kubernetes. Handles StatefulSet orchestration, session draining, and transaction recovery. Repository index forthcoming.
 
 ## Global Architecture & Contracts

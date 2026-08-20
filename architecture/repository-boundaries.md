@@ -53,6 +53,9 @@ WildFly Glow contains the provisioning analysis engine. It is a library dependen
 - **CLI** (`GlowCLI`, `ScanCommand`, `ShowAddOnsCommand`, etc.): Picocli-based command-line interface for standalone usage.
 - **Arquillian plugin** (`ScanMojo`): Maven plugin that scans Arquillian `@Deployment` methods to generate `provisioning.xml` for test provisioning.
 - **OpenShift deployment** (`OpenShiftSupport`): Automatic deployers for PostgreSQL, MySQL, MariaDB, AMQ Broker, and Keycloak when deploying to OpenShift.
+- **Maven resolution** (`MavenResolver`, `MavenSettings`): Resolves Galleon feature packs from Maven repositories, handling settings.xml, proxy configuration, and default remote repositories.
+- **JBang integration**: Enables running single Java files in WildFly with `//DEPS org.wildfly.glow:wildfly-glow` and `//GLOW` comments for add-on configuration.
+- **Docker support** (`DockerSupport`): Generates container images from provisioned servers, supporting both server and application image separation.
 - These tools depend on Galleon APIs and WildFly feature pack metadata, but do not depend on wildfly-core or wildfly runtime classes.
 
 **Test**: If the component scans deployments to discover required layers, manages the rule-matching database, or generates provisioning configuration from scan results, it belongs in wildfly-glow. If it's a Maven build goal that consumes that output, it belongs in wildfly-maven-plugin.
