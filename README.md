@@ -51,5 +51,5 @@ If you are not using an agent with skill support, you can follow the same steps 
 | [wildfly-core](https://github.com/wildfly/wildfly-core) | Indexed | Core server management model, controller, CLI, and kernel runtime |
 | [wildfly](https://github.com/wildfly/wildfly) | Indexed | Full application server — Jakarta EE subsystems, clustering, Elytron, distribution packaging |
 | wildfly-glow | Planned | Provisioning analysis engine for determining minimal server configuration |
-| wildfly-maven-plugin | Planned | Developer-facing build tooling for packaging, provisioning, and running WildFly |
+| [wildfly-maven-plugin](https://github.com/wildfly/wildfly-maven-plugin) | Indexed | Developer-facing build tooling for provisioning, packaging, deploying, and running WildFly servers from Maven |
 | wildfly-operator | Planned | Kubernetes operator for managing WildFly deployments |

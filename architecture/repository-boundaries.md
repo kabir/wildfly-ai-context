@@ -29,13 +29,33 @@ A component belongs in the wildfly repository if it implements a Jakarta EE spec
 
 **Test**: If the component implements something defined by a Jakarta EE or MicroProfile specification, or if it only makes sense in the context of application workloads (not bare management), it belongs in wildfly.
 
-### What belongs in provisioning tools (`wildfly-glow`, `wildfly-maven-plugin`)
+### What belongs in `wildfly-maven-plugin`
 
-These repositories contain build-time and analysis tooling. They never run inside the server process:
+The Maven plugin repository contains the developer-facing build tooling for provisioning, packaging, deploying, and running WildFly servers from Maven:
 
-- **WildFly Glow**: Archive scanning rules, layer mapping databases, provisioning configuration generators.
-- **WildFly Maven Plugin**: Maven Mojo implementations, Galleon API integration, dev-mode server lifecycle management, CLI script runner.
+- **Provisioning and packaging Mojos** (`PackageServerMojo`, `ProvisionServerMojo`, `ApplicationImageMojo`): Galleon-based server provisioning, Bootable JAR packaging, and Docker/Podman image building. The `AbstractProvisionServerMojo` base class handles feature-pack and layer configuration, channel support, and Galleon options.
+- **WildFly Glow integration** (`GlowConfig`): Wraps the Glow `ScanArguments` API to implement `<discover-provisioning-info/>`. When present, the plugin delegates deployment scanning to the Glow library to auto-discover required feature packs and layers.
+- **Server lifecycle Mojos** (`DevMojo`, `RunMojo`, `StartMojo`, `StartJarMojo`, `ShutdownMojo`): Dev-mode with source-watching and hot-reload, foreground server execution, background server launch, and shutdown.
+- **Deployment Mojos** (`DeployMojo`, `RedeployMojo`, `UndeployMojo`, `DeployArtifactMojo`): Deploy/redeploy/undeploy via the management API.
+- **CLI execution** (`ExecuteCommandsMojo`, `CommandExecutor`, `OfflineCommandExecutor`): Runs JBoss CLI commands against running or embedded servers. Used both standalone and as packaging scripts during build.
+- **Core API** (`core/`): Shared utilities — constants, Maven logging bridge, proxy selection, repository enrichment.
+
+**Test**: If the component is a Maven goal, a Maven plugin configuration element, or build-time infrastructure for provisioning/packaging/deploying WildFly, it belongs in wildfly-maven-plugin. If it's deployment scanning logic or layer rule matching, it belongs in wildfly-glow.
+
+### What belongs in `wildfly-glow`
+
+WildFly Glow contains the provisioning analysis engine. It is a library dependency of the Maven plugin but also provides its own CLI:
+
+- **Scanning engine** (`GlowSession`, `ScanArguments`, `ScanResults`): Scans application archives for API usage, annotations, XML descriptors, and properties files.
+- **Layer mapping** (`LayerMapping`, `LayerMetadata`): Rule matching system that maps deployment content to Galleon layers.
+- **Add-on management** (`Suggestions`): Discovers optional server features based on discovered layers.
+- **Provisioning utilities** (`ProvisioningUtils`): Generates Galleon provisioning configuration from scan results.
+- **CLI** (`GlowCLI`, `ScanCommand`, `ShowAddOnsCommand`, etc.): Picocli-based command-line interface for standalone usage.
+- **Arquillian plugin** (`ScanMojo`): Maven plugin that scans Arquillian `@Deployment` methods to generate `provisioning.xml` for test provisioning.
+- **OpenShift deployment** (`OpenShiftSupport`): Automatic deployers for PostgreSQL, MySQL, MariaDB, AMQ Broker, and Keycloak when deploying to OpenShift.
 - These tools depend on Galleon APIs and WildFly feature pack metadata, but do not depend on wildfly-core or wildfly runtime classes.
+
+**Test**: If the component scans deployments to discover required layers, manages the rule-matching database, or generates provisioning configuration from scan results, it belongs in wildfly-glow. If it's a Maven build goal that consumes that output, it belongs in wildfly-maven-plugin.
 
 ## SPI Contracts Between Repositories
 
@@ -61,9 +81,14 @@ The `wildfly` repository depends on `wildfly-core` and extends it. The contracts
 - WildFly Glow reads feature pack metadata (layer descriptions, dependencies, configuration elements) to map application-level discoveries to provisioning layers.
 - Glow ships its own rules database that maps annotations, descriptors, and API class references to layers. This database must be updated when layers are added, renamed, or restructured in the wildfly feature packs.
 
+### Maven Plugin → WildFly Glow
+
+- The WildFly Maven Plugin depends on the Glow library (`org.wildfly.glow`) as a compile-time dependency. When `<discover-provisioning-info/>` is configured, the plugin's `GlowConfig` class constructs a `ScanArguments` instance and delegates to Glow's `GlowSession` to scan the deployment and produce provisioning configuration.
+- The Maven plugin exposes all of Glow's configuration surface (context, profile, add-ons, spaces, version, server-variant, verbose, excluded-archives, layers-for-jndi) through the `<discover-provisioning-info/>` XML element.
+
 ### Maven Plugin → Galleon API
 
-- The WildFly Maven Plugin delegates provisioning to the Galleon API. It passes feature pack coordinates, layer names, and configuration options.
+- The WildFly Maven Plugin delegates provisioning to the Galleon API. It passes feature pack coordinates, layer names, channel manifests, and configuration options (stability level, forked provisioning).
 - The plugin also invokes the JBoss CLI (from wildfly-core) for post-provisioning script execution, using the embedded CLI API in admin-only mode.
 
 ## Schema Versioning Standards
@@ -103,10 +128,12 @@ Domain mode requires that the domain controller and host controllers can operate
 The dependency graph is strictly acyclic:
 
 ```
-wildfly-maven-plugin ──→ Galleon API
-                         ──→ Feature Pack metadata (from wildfly)
+wildfly-maven-plugin ──→ wildfly-glow (library dependency)
+                     ──→ Galleon API
+                     ──→ Feature Pack metadata (from wildfly)
+                     ──→ JBoss CLI (from wildfly-core, embedded mode)
 wildfly-glow ──→ Galleon API
-                 ──→ Feature Pack metadata (from wildfly)
+             ──→ Feature Pack metadata (from wildfly)
 wildfly ──→ wildfly-core
 wildfly-core ──→ (JBoss Modules, JBoss MSC, JBoss Remoting, XNIO)
 ```

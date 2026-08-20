@@ -54,13 +54,13 @@ WildFly Glow inspects application archives to determine the minimal server confi
 
 ### WildFly Maven Plugin (Developer Tooling)
 
-The Maven plugin is the primary developer interface for building and running WildFly-based applications:
+The Maven plugin (`org.wildfly.plugins:wildfly-maven-plugin`) is the primary developer interface for building and running WildFly-based applications. It depends on WildFly Glow as a library for deployment scanning and on Galleon for server provisioning. It provides 15 Maven goals organized into four areas:
 
-- **Provisioning Goal**: Invokes Galleon to provision a trimmed server based on declared feature packs and layers, or based on WildFly Glow analysis output.
-- **Package Goal**: Produces a bootable JAR or a hollow server directory, ready for deployment.
-- **Dev Goal**: Runs a server in development mode with hot-reload of application and configuration changes.
-- **CLI Script Execution**: Runs JBoss CLI scripts against the provisioned server during build, enabling configuration customization beyond what layers provide.
-- **Channel Integration**: Resolves feature pack versions through WildFly Channels, providing controlled update streams for production environments.
+- **Provisioning and Packaging** (`provision`, `package`, `image`): Invokes Galleon to provision a trimmed server based on declared feature packs and layers, or delegates to WildFly Glow for automatic discovery via `<discover-provisioning-info/>`. The `package` goal can produce a directory-based server installation or a Bootable JAR (an executable fat JAR containing server + application). The `image` goal builds and optionally pushes Docker/Podman container images.
+- **Server Lifecycle** (`dev`, `run`, `start`, `start-jar`, `shutdown`): The `dev` goal provides hot-reload development mode — it watches source directories, recompiles on change, and redeploys. The `run` goal starts the server with the application deployed. The `start`/`start-jar` goals launch the server as a background process.
+- **Deployment Operations** (`deploy`, `deploy-only`, `deploy-artifact`, `redeploy`, `redeploy-only`, `undeploy`): Deploy, redeploy, and undeploy applications and artifacts to a running WildFly server via the management API.
+- **CLI and Resource Management** (`execute-commands`, `add-resource`): Executes JBoss CLI commands against a running or embedded server. Packaging scripts run CLI commands in an embedded server during build to fine-tune configuration beyond what layers provide.
+- **Channel Integration**: Resolves feature pack versions through WildFly Channels (YAML-based version manifests), providing controlled update streams for reproducible provisioning.
 
 ### WildFly Operator (Kubernetes Deployment)
 

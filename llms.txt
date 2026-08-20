@@ -7,10 +7,13 @@
 - [WildFly Core](https://raw.githubusercontent.com/kabir/wildfly-core/ai-index/llms.txt): Core server management model, controller, CLI, and subsystem parsing. Defines the kernel runtime, management resource tree, operation handlers, deployment scanner SPI, and the Remoting-based management protocol. All subsystems in wildfly-core are boot-critical and available in both standalone and domain mode.
 - [WildFly Full](https://raw.githubusercontent.com/kabir/wildfly/ai-index/docs/src/main/asciidoc/llms.txt): Full application server, Jakarta EE subsystem guides, security, HA, and deployment. Extends wildfly-core with Jakarta EE specifications (Servlet, EJB, JPA, JMS, CDI, JAX-RS, MicroProfile), clustering, Elytron security integration, and the complete distribution packaging.
 
+## Ecosystem Tooling
+
+- [WildFly Maven Plugin](https://raw.githubusercontent.com/kabir/wildfly-maven-plugin/ai-index/llms.txt): Developer-facing Maven build tooling for provisioning, packaging, deploying, and running WildFly servers. Provides 15 Maven goals including Galleon-based server provisioning, Bootable JAR packaging, container image building, dev-mode with hot-reload, and CLI script execution. Integrates WildFly Glow for automatic discovery of required feature packs and layers via `<discover-provisioning-info/>`.
+
 ## Ecosystem Tooling (Placeholders/Future)
 
 - WildFly Glow: Provisioning analysis engine that inspects application archives to determine the minimal set of Galleon feature packs and layers required. Repository index will be linked once the ai-index branch is established.
-- WildFly Maven Plugin: Developer-facing build tooling for packaging, provisioning, and running WildFly servers from Maven. Coordinates Galleon provisioning, CLI script execution, and dev-mode hot-reload. Repository index forthcoming.
 - WildFly Operator: Kubernetes operator for managing WildFly application deployments on OpenShift and vanilla Kubernetes. Handles StatefulSet orchestration, session draining, and transaction recovery. Repository index forthcoming.
 
 ## Global Architecture & Contracts
